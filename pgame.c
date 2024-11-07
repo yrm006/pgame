@@ -14,6 +14,7 @@ int main(){
 
     Texture2D kumo = LoadTexture("kumo.png");
     Texture2D hero = LoadTexture("hero.png");
+    Texture2D teki = LoadTexture("teki.png");
 
     while(! WindowShouldClose() ){
         if(IsKeyPressed(KEY_SPACE)){
@@ -53,6 +54,11 @@ int main(){
             col = YELLOW;
         }
 
+        if(CheckCollisionCircles((Vector2){x+30, y+30}, 30, (Vector2){500+30, 450-60+30}, 30)){
+           // tekini atatta toki
+           yv = -20; 
+        }
+
         BeginDrawing();
             ClearBackground( LIME );
             DrawTexture(kumo, 400, 80, WHITE);
@@ -60,6 +66,7 @@ int main(){
             DrawTexture(kumo, 650, 95, WHITE);
             // DrawCircle(x, y, 30, col);
             DrawTexture(hero, x, y, WHITE);
+            DrawTexture(teki, 500, 450-60, WHITE);
         EndDrawing();
     }
 
