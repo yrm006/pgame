@@ -1,10 +1,31 @@
 //% cc pgame.c libraylib.a -framework IOKit -framework Cocoa
 #include "raylib.h"
 
+struct Teki{
+    int x;
+    int y;
+    int hp;
+    Texture2D tx;
+    void (*ugoki)(struct Teki* this);
+};
+
+void Teki_ugoki_normal(struct Teki* this){
+    this->x = this->x - 1;
+}
+
+void Teki_ugoki_yarareta(struct Teki* this){
+    this->y = this->y + 1;
+}
+
 int main(){
     InitWindow(800, 450, "Ore-sama no GAME");
     SetTargetFPS(60);
     // ToggleFullscreen();
+
+    Texture2D kumo = LoadTexture("kumo.png");
+    Texture2D hero = LoadTexture("hero.png");
+    Texture2D teki = LoadTexture("teki.png");
+    Texture2D teki180 = LoadTexture("teki180.png");
 
     int x = 400;
     int xv = 0;
@@ -12,9 +33,14 @@ int main(){
     int yv = 0;
     Color col = YELLOW;
 
-    Texture2D kumo = LoadTexture("kumo.png");
-    Texture2D hero = LoadTexture("hero.png");
-    Texture2D teki = LoadTexture("teki.png");
+    // int teki_hp = 3;
+    struct Teki teki0;{
+        teki0.x = 500;
+        teki0.y = 450-60;
+        teki0.hp = 3;
+        teki0.tx = teki;
+        teki0.ugoki = Teki_ugoki_normal;
+    }
 
     while(! WindowShouldClose() ){
         if(IsKeyPressed(KEY_SPACE)){
@@ -48,15 +74,22 @@ int main(){
             yv = yv + 1;
         }
 
+        teki0.ugoki(&teki0);
+
         if( ColorToInt(col) == ColorToInt(YELLOW) ){
             col = RED;
         }else{
             col = YELLOW;
         }
 
-        if(CheckCollisionCircles((Vector2){x+30, y+30}, 30, (Vector2){500+30, 450-60+30}, 30)){
-           // tekini atatta toki
-           yv = -20; 
+        if(CheckCollisionCircles((Vector2){x+30, y+30}, 30, (Vector2){teki0.x+30, teki0.y+30}, 30)){
+            // tekini atatta toki
+            yv = -20;
+            teki0.hp = teki0.hp - 1;
+            if(teki0.hp == 0){
+                teki0.tx = teki180;
+                teki0.ugoki = Teki_ugoki_yarareta;   
+            }
         }
 
         BeginDrawing();
@@ -66,7 +99,7 @@ int main(){
             DrawTexture(kumo, 650, 95, WHITE);
             // DrawCircle(x, y, 30, col);
             DrawTexture(hero, x, y, WHITE);
-            DrawTexture(teki, 500, 450-60, WHITE);
+            DrawTextureEx(teki0.tx, (Vector2){teki0.x, teki0.y}, 0, 1, WHITE);
         EndDrawing();
     }
 
