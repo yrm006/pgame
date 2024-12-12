@@ -1,4 +1,6 @@
 //% cc pgame.c libraylib.a -framework IOKit -framework Cocoa
+//% x86_64-w64-mingw32-gcc pgame.c libraylib.a -lgdi32 -lwinmm
+//% afconvert -f WAVE -d LEI24 xxx.m4a xxx.wav
 #include "raylib.h"
 
 struct Teki{
@@ -36,14 +38,18 @@ void Teki_yarareta(struct Teki* this, Texture2D yarare_tx){
 
 
 int main(){
+    InitAudioDevice();
     InitWindow(800, 450, "Ore-sama no GAME");
     SetTargetFPS(60);
     // ToggleFullscreen();
 
-    Texture2D kumo = LoadTexture("kumo.png");
-    Texture2D hero = LoadTexture("hero.png");
-    Texture2D teki = LoadTexture("teki.png");
-    Texture2D teki180 = LoadTexture("teki180.png");
+    Texture2D kumo = LoadTexture("res/kumo.png");
+    Texture2D hero = LoadTexture("res/hero.png");
+    Texture2D teki = LoadTexture("res/teki.png");
+    Texture2D teki180 = LoadTexture("res/teki180.png");
+
+    Sound snd_jump = LoadSound("res/jump.mp3");
+    Sound snd_punch = LoadSound("res/punch.mp3");
 
     float x = 400;
     float xv = 0;
@@ -76,10 +82,12 @@ int main(){
 
     int teki0_timer = 60*5;
     int teki1_timer = 60*8;
+    int teki2_timer = 60*6;
 
     while(! WindowShouldClose() ){
         if(IsKeyPressed(KEY_SPACE)){
             if( (450-60)-1 <= y ){
+                PlaySound(snd_jump);
                 yv = -20;
             }
         }
@@ -135,6 +143,15 @@ int main(){
 
             teki1_timer = 60*8;
         }
+        if( !--teki2_timer ){
+            teki2.x = 600;
+            teki2.y = 450-60;
+            teki2.hp = 5;
+            teki2.tx = teki;
+            teki2.ugoki = Teki_ugoki_normal;
+
+            teki2_timer = 60*6;
+        }
 
         teki0.ugoki(&teki0);
         teki1.ugoki(&teki1);
@@ -147,16 +164,19 @@ int main(){
         }
 
         if( Teki_atattaka(&teki0, (Vector2){x+30, y+30}, 30) ){
+            PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
             Teki_yarareta(&teki0, teki180);
         }
         if( Teki_atattaka(&teki1, (Vector2){x+30, y+30}, 30) ){
+            PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
             Teki_yarareta(&teki1, teki180);
         }
         if( Teki_atattaka(&teki2, (Vector2){x+30, y+30}, 30) ){
+            PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
             Teki_yarareta(&teki2, teki180);
