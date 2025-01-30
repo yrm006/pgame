@@ -2,6 +2,7 @@
 //% x86_64-w64-mingw32-gcc pgame.c libraylib.a -lgdi32 -lwinmm
 //% afconvert -f WAVE -d LEI24 xxx.m4a xxx.wav
 #include "raylib.h"
+#include <stdio.h>
 
 struct Teki{
     int x;
@@ -21,18 +22,25 @@ void Teki_ugoki_yarareta(struct Teki* this){
 
 int Teki_atattaka(struct Teki* this, Vector2 hero_xy, int hero_r){
     if( CheckCollisionCircles((Vector2){this->x+30, this->y+30}, 30, hero_xy, hero_r) ){
-        return 1;
+        int sa = (this->y+30) - hero_xy.y;
+        if(sa < 30){
+            return 2;
+        }else{
+            return 1;
+        }
     }else{
         return 0;
     }
 }
 
-void Teki_yarareta(struct Teki* this, Texture2D yarare_tx){
+int Teki_yarareta(struct Teki* this, Texture2D yarare_tx){
     this->hp = this->hp - 1;
     if(this->hp == 0){
         this->tx = yarare_tx;
         this->ugoki = Teki_ugoki_yarareta;
+        return 1;
     }
+    return 0;
 }
 
 
@@ -50,6 +58,11 @@ int main(){
 
     Sound snd_jump = LoadSound("res/jump.mp3");
     Sound snd_punch = LoadSound("res/punch.mp3");
+    Sound snd_teeen = LoadSound("res/teeen.mp3");
+    Sound snd_clear = LoadSound("res/clear.mp3");
+
+REPLAY:
+    printf("game start\n");
 
     float x = 400;
     float xv = 0;
@@ -83,6 +96,9 @@ int main(){
     int teki0_timer = 60*5;
     int teki1_timer = 60*8;
     int teki2_timer = 60*6;
+
+    Color bg = LIME;
+    int score = 0;
 
     while(! WindowShouldClose() ){
         if(IsKeyPressed(KEY_SPACE)){
@@ -163,27 +179,74 @@ int main(){
             col = YELLOW;
         }
 
-        if( Teki_atattaka(&teki0, (Vector2){x+30, y+30}, 30) ){
+        int atattaka0 = Teki_atattaka(&teki0, (Vector2){x+30, y+30}, 30);
+        if( atattaka0 == 1 ){
             PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
-            Teki_yarareta(&teki0, teki180);
+            int yarare = Teki_yarareta(&teki0, teki180);
+            if(yarare == 1){
+                score = score + 1;
+            }
+        }else
+        if( atattaka0 == 2 ){
+            if(ColorToInt(bg) == ColorToInt(RED)){
+                // none
+            }else{
+                PlaySound(snd_teeen);
+                bg = RED;
+                break;
+            }
         }
-        if( Teki_atattaka(&teki1, (Vector2){x+30, y+30}, 30) ){
+
+        int atattaka1 = Teki_atattaka(&teki1, (Vector2){x+30, y+30}, 30);
+        if( atattaka1 == 1 ){
             PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
-            Teki_yarareta(&teki1, teki180);
+            int yarare = Teki_yarareta(&teki1, teki180);
+            if(yarare == 1){
+                score = score + 1;
+            }
+        }else
+        if( atattaka1 == 2 ){
+            if(ColorToInt(bg) == ColorToInt(RED)){
+                // none
+            }else{
+                PlaySound(snd_teeen);
+                bg = RED;
+                break;
+            }
         }
-        if( Teki_atattaka(&teki2, (Vector2){x+30, y+30}, 30) ){
+
+        int atattaka2 = Teki_atattaka(&teki2, (Vector2){x+30, y+30}, 30);
+        if( atattaka2 == 1 ){
             PlaySound(snd_punch);
             y = y - 30;
             yv = -20;
-            Teki_yarareta(&teki2, teki180);
+            int yarare = Teki_yarareta(&teki2, teki180);
+            if(yarare == 1){
+                score = score + 1;
+            }
+        }else
+        if( atattaka2 == 2 ){
+            if(ColorToInt(bg) == ColorToInt(RED)){
+                // none
+            }else{
+                PlaySound(snd_teeen);
+                bg = RED;
+                break;
+            }
+        }
+
+        if(20 <= score){
+            bg = GOLD;
+            PlaySound(snd_clear);
+            break;
         }
 
         BeginDrawing();
-            ClearBackground( LIME );
+            ClearBackground( bg );
             DrawTexture(kumo, 400, 80, WHITE);
             DrawTexture(kumo, 200, 85, WHITE);
             DrawTexture(kumo, 650, 95, WHITE);
@@ -192,7 +255,38 @@ int main(){
             DrawTextureEx(teki0.tx, (Vector2){teki0.x, teki0.y}, 0, 1, WHITE);
             DrawTextureEx(teki1.tx, (Vector2){teki1.x, teki1.y}, 0, 1, WHITE);
             DrawTextureEx(teki2.tx, (Vector2){teki2.x, teki2.y}, 0, 1, WHITE);
+            DrawText(TextFormat("%d", score), 10, 10, 64, WHITE);
         EndDrawing();
+    }
+
+    if(20 <= score){
+        // game clear
+        while(! WindowShouldClose() ){
+            if(IsKeyPressed(KEY_ENTER)){
+                goto REPLAY;
+            }
+
+            BeginDrawing();
+                ClearBackground(bg);
+
+                DrawText("OMEDETO!", 300, 220, 32, WHITE);
+                DrawTexture(hero, x, y, WHITE);
+            EndDrawing();
+        }
+    }else{
+        // game over
+        while(! WindowShouldClose() ){
+            if(IsKeyPressed(KEY_ENTER)){
+                goto REPLAY;
+            }
+
+            BeginDrawing();
+                ClearBackground(bg);
+
+                DrawText("YOU LOSE!", 300, 220, 32, WHITE);
+                DrawTexture(hero, x, y, WHITE);
+            EndDrawing();
+        }
     }
 
     CloseWindow();
